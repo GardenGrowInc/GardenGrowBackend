@@ -92,7 +92,7 @@ exports.findProductById = async (req, res) => {
         
         res.status(200).json({
             ...product.toObject(),
-            CAD: `C$${parseFloat(product.CAD).toFixed(2)}`
+            CAD: product.CAD ? `C$${parseFloat(product.CAD.replace(/[^0-9.-]+/g,"")).toFixed(2)}` : "C$0.00"
         });
     } catch (error) {
         console.error("Error finding product by ID:", error.message);
