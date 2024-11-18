@@ -47,18 +47,26 @@ exports.createUser = async (req, res) => {
             });
         }
 
+        let hashedPassword, hashedConfirmPassword;
+        // Hash the password only if token is not present
+        if (!token) {
+            hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+            hashedConfirmPassword = await bcrypt.hash(confirmPassword, 10); // Hash the confirm password
+        }
+
         const newUser = new User({
             email,
             firstName,
             lastName,
             mobileno,
-            password: token ? undefined : password, // Only set password if token is not present
-            confirmPassword: token ? undefined : confirmPassword, // Only set confirmPassword if token is not present
+            password: token ? undefined : hashedPassword, // Only set password if token is not present
+            confirmPassword: token ? undefined : hashedConfirmPassword, // Only set confirmPassword if token is not present
             token // Ensure token is included
         });
 
         // Save the user to the database
         const savedUser = await newUser.save();
+        console.log(savedUser,"User created successfully");
         return res.status(201).json({ message: 'User created successfully', user: savedUser });
 
     } catch (err) {

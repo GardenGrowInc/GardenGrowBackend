@@ -40,3 +40,5 @@ mongoose.connect(process.env.MONGO_URI_GG)
     .catch((error) => {
         console.log("MongoDB connection error:", error);
     });
+
+    
