@@ -66,7 +66,7 @@ exports.createUser = async (req, res) => {
 
         // Save the user to the database
         const savedUser = await newUser.save();
-        console.log(savedUser,"User created successfully");
+        console.log(savedUser,"User created ");
         return res.status(201).json({ message: 'User created successfully', user: savedUser });
 
     } catch (err) {
