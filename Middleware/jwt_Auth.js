@@ -13,7 +13,7 @@ const jwtMiddleware = (req, res, next) => {
             console.error("JWT verification error:", err.message);
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        req.userId = decoded.id;
+        req.email = decoded.email;
         next();
     });
 };
