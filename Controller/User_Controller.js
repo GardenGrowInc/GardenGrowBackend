@@ -1,37 +1,25 @@
 const User = require('../Model/User_Model');
+const UserWithToken = require('../Model/User_Model_With_Token');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // Import JWT library
 require('dotenv').config()
 
 exports.createUser = async (req, res) => {
-    const { email, firstName, lastName, mobileno, password, confirmPassword, token } = req.body;
+    const { email, firstName, lastName, mobileno, password, confirmPassword } = req.body;
 
     console.log("Request Body:", req.body); // Log the request body
 
     try {
-        // Check if token is present
-        if (token) {
-            console.log("Token is present");
-            // Validate only email and name
-            if (!email || !firstName || !lastName) {
-                return res.status(400).json({
-                    message: 'Error creating user',
-                    error: 'Email and name are required when token is present.'
-                });
-            }
-        } else {
-            console.log("Token is not present");
-            // Validate email and password
-            if (!email || !password || !confirmPassword || !mobileno) {
-                return res.status(400).json({
-                    message: 'Error creating user',
-                    error: 'Email, password, confirmPassword, and mobileno are required when token is not present.'
-                });
-            }
+        // Validate email and password
+        if (!email || !password || !confirmPassword || !mobileno) {
+            return res.status(400).json({
+                message: 'Error creating user',
+                error: 'Email, password, confirmPassword, and mobileno are required.'
+            });
         }
 
         // Additional validation for password and confirmPassword
-        if (!token && password !== confirmPassword) {
+        if (password !== confirmPassword) {
             return res.status(400).json({
                 message: 'Error creating user',
                 error: 'Password and confirm password must match.'
@@ -47,21 +35,15 @@ exports.createUser = async (req, res) => {
             });
         }
 
-        let hashedPassword, hashedConfirmPassword;
-        // Hash the password only if token is not present
-        if (!token) {
-            hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-            hashedConfirmPassword = await bcrypt.hash(confirmPassword, 10); // Hash the confirm password
-        }
+        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
         const newUser = new User({
             email,
             firstName,
             lastName,
             mobileno,
-            password: token ? undefined : hashedPassword, // Only set password if token is not present
-            confirmPassword: token ? undefined : hashedConfirmPassword, // Only set confirmPassword if token is not present
-            token // Ensure token is included
+            password: hashedPassword, // Set password
+            confirmPassword: hashedPassword // Set confirmPassword
         });
 
         // Save the user to the database
@@ -72,6 +54,14 @@ exports.createUser = async (req, res) => {
     } catch (err) {
         return res.status(500).json({ message: 'Error creating user', error: err.message });
     }
+};
+
+exports.createUserWithToken = async (req, res) => {
+    const { email, name, token } = req.body;
+    const jwtWithToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const userWithToken = new UserWithToken({ email, name});
+    await userWithToken.save();
+    return res.status(201).json({ message: 'User created with token', user: userWithToken, accessToken: jwtWithToken });
 };
 
 
